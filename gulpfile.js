@@ -4,6 +4,8 @@ var browserSync = require('browser-sync');
 var del = require('del');
 var fs = require('fs');
 var git = require('git-rev-sync');
+var tryFn = require('nice-try');
+var saveLicense = require('uglify-save-license');
 
 var $ = gulpLoadPlugins();
 var reload = browserSync.reload;
@@ -56,7 +58,7 @@ gulp.task('prepare-scripts', function () {
         'src/scripts/**/*.js'
     ]).pipe($.plumber())
         .pipe($.injectVersion({replace: '${ARIANG_VERSION}'}))
-        .pipe($.replace(/\${ARIANG_BUILD_COMMIT}/g, git.short()))
+        .pipe($.replace(/\${ARIANG_BUILD_COMMIT}/g, tryFn(git.short) || 'Local'))
         .pipe(gulp.dest('.tmp/scripts'))
         .pipe(reload({stream: true}));
 });
@@ -75,8 +77,11 @@ gulp.task('prepare-html', ['prepare-styles', 'prepare-scripts', 'prepare-views']
     ]).pipe($.useref({searchPath: ['.tmp', 'src', '.']}))
         .pipe($.if('js/*.js', $.replace(/\/\/# sourceMappingURL=.*/g, '')))
         .pipe($.if('css/*.css', $.replace(/\/\*# sourceMappingURL=.* \*\/$/g, '')))
-        .pipe($.if(['js/moment-with-locales-*.min.js', 'js/plugins.min.js', 'js/aria-ng.min.js'], $.uglify({preserveComments: 'license'})))
+        .pipe($.if(['js/moment-with-locales-*.min.js', 'js/plugins.min.js', 'js/aria-ng.min.js'], $.uglify({output: {comments: saveLicense}})))
         .pipe($.if(['css/plugins.min.css', 'css/aria-ng.min.css'], $.cssnano({safe: true, autoprefixer: false})))
+        .pipe($.replace(/url\((\.\.\/fonts\/[a-zA-Z0-9\-]+\.woff2)(\?[a-zA-Z0-9\-_=.]+)?\)/g, function(match, fileName) {
+            return 'url(' + fileName + ')'; // remove version of woff2 file (woff2 file should be cached via application cache)
+        }))
         .pipe($.if(['js/plugins.min.js', 'js/aria-ng.min.js', 'css/plugins.min.css', 'css/aria-ng.min.css'], $.rev()))
         .pipe($.if('*.html', $.htmlmin({collapseWhitespace: true})))
         .pipe($.revReplace())
@@ -133,6 +138,8 @@ gulp.task('process-assets-bundle', ['prepare-fonts', 'prepare-langs', 'prepare-h
                     var lastPointIndex = fileName.lastIndexOf('.');
                     var languageName = fileName.substr(0, lastPointIndex);
 
+                    content = content.replace(/\\/g, '\\\\');
+                    content = content.replace(/\r/g, '');
                     content = content.replace(/\n/g, '\\n');
                     content = content.replace(/"/g, '\\"');
                     result += 'e.setLanguageAsset(\'' + languageName + '\',"' + content + '");';

@@ -20,7 +20,14 @@
                 return path;
             }
 
-            return path.substring(index + 1);
+            var fileNameAndQueryString = path.substring(index + 1);
+            var queryStringStartPos = fileNameAndQueryString.indexOf('?');
+
+            if (queryStringStartPos <= 0) {
+                return fileNameAndQueryString;
+            }
+
+            return fileNameAndQueryString.substring(0, queryStringStartPos);
         };
 
         var calculateDownloadRemainTime = function (remainBytes, downloadSpeed) {
@@ -294,6 +301,12 @@
             task.remainTime = calculateDownloadRemainTime(task.remainLength, task.downloadSpeed);
             task.seeder = (task.seeder === true || task.seeder === 'true');
 
+            if (task.verifiedLength && task.totalLength) {
+                task.verifiedPercent = parseInt(task.verifiedLength / task.totalLength * 100);
+            } else {
+                task.verifiedPercent = undefined;
+            }
+
             var taskNameResult = getTaskName(task);
             task.taskName = taskNameResult.name;
             task.hasTaskName = taskNameResult.success;
@@ -370,8 +383,8 @@
 
             for (var i = 0; i < peers.length; i++) {
                 var peer = peers[i];
-                var upstreamToSpeed = peer.uploadSpeed;
-                var downstreamFromSpeed = peer.downloadSpeed;
+                var upstreamToSpeed = parseInt(peer.uploadSpeed);
+                var downstreamFromSpeed = parseInt(peer.downloadSpeed);
                 var completedPieces = getPieceStatus(peer.bitfield, task.numPieces);
                 var completedPieceCount = ariaNgCommonService.countArray(completedPieces, true);
 
@@ -735,6 +748,8 @@
                 var failedCount = 0;
 
                 var doRetryFunc = function (task, index) {
+                    ariaNgLogService.debug('[aria2TaskService.retryTasks] task#' + index + ', gid=' + task.gid + ' start retrying', task);
+
                     return retryTaskFunc(task.gid, function (response) {
                         ariaNgLogService.debug('[aria2TaskService.retryTasks] task#' + index + ', gid=' + task.gid + ', result=' + response.success, task);
 
@@ -766,7 +781,9 @@
                         currentPromise = doRetryFunc(task, i);
                     } else {
                         currentPromise = (function (task, index) {
-                            return lastPromise.then(function () {
+                            return lastPromise.then(function onSuccess() {
+                                return doRetryFunc(task, index);
+                            }).catch(function onError() {
                                 return doRetryFunc(task, index);
                             });
                         })(task, i);
@@ -801,8 +818,8 @@
                         silent: !!silent,
                         callback: function (response) {
                             ariaNgCommonService.pushArrayTo(results, response.results);
-                            hasSuccess = hasSuccess | response.hasSuccess;
-                            hasError = hasError | response.hasError;
+                            hasSuccess = hasSuccess || response.hasSuccess;
+                            hasError = hasError || response.hasError;
                         }
                     }));
                 }
@@ -813,13 +830,13 @@
                         silent: !!silent,
                         callback: function (response) {
                             ariaNgCommonService.pushArrayTo(results, response.results);
-                            hasSuccess = hasSuccess | response.hasSuccess;
-                            hasError = hasError | response.hasError;
+                            hasSuccess = hasSuccess || response.hasSuccess;
+                            hasError = hasError || response.hasError;
                         }
                     }));
                 }
 
-                return $q.all(promises).then(function () {
+                return $q.all(promises).then(function onSuccess() {
                     if (callback) {
                         callback({
                             hasSuccess: !!hasSuccess,
@@ -843,6 +860,28 @@
                     silent: !!silent,
                     callback: callback
                 });
+            },
+            onConnectionSuccess: function (callback) {
+                if (!callback) {
+                    ariaNgLogService.warn('[aria2TaskService.onConnectionSuccess] callback is null');
+                    return;
+                }
+
+                aria2RpcService.onConnectionSuccess({
+                    callback: callback
+                });
+
+            },
+            onConnectionFailed: function (callback) {
+                if (!callback) {
+                    ariaNgLogService.warn('[aria2TaskService.onConnectionFailed] callback is null');
+                    return;
+                }
+
+                aria2RpcService.onConnectionFailed({
+                    callback: callback
+                });
+
             },
             onFirstSuccess: function (callback) {
                 if (!callback) {

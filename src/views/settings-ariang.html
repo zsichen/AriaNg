@@ -33,7 +33,7 @@
                         </div>
                         <div class="setting-value col-sm-8">
                             <select class="form-control" style="width: 100%;" ng-model="context.settings.language"
-                                    ng-options="type as language.displayName for (type, language) in context.languages"
+                                    ng-options="type as (((('languages.' + language.name) | translate) !== ('languages.' + language.name) ? (('languages.' + language.name) | translate) : language.name) + ' (' + language.displayName + ')') for (type, language) in context.languages"
                                     ng-change="setLanguage(context.settings.language)">
                             </select>
                         </div>
@@ -56,12 +56,13 @@
                                data-trigger="hover" data-placement="auto right" data-container="body" data-html="true"
                                data-content="{{('Supported Placeholder' | translate) + ':<br/>' +
                                ('AriaNg Title' | translate) + ': ${title}<br/>' +
+                               ('Current RPC Alias' | translate) + ': ${rpcprofile}<br/>' +
                                ('Downloading Count' | translate) + ': ${downloading}<br/>' +
                                 ('Waiting Count' | translate) + ': ${waiting}<br/>' +
                                 ('Stopped Count' | translate) + ': ${stopped}<br/>' +
                                 ('Download Speed' | translate) + ': ${downspeed}<br/>' +
                                 ('Upload Speed' | translate) + ': ${upspeed}<br/><br/>' +
-                                ('Tips: You can use the &quot;noprefix&quot; tag to ignore the prefix, &quot;nosuffix&quot; tag ignore the suffix, and &quot;scale=n&quot; tag to set the decimal precision.' | translate) + '<br/>' +
+                                ('Tips: You can use the &quot;noprefix&quot; tag to ignore the prefix, &quot;nosuffix&quot; tag to ignore the suffix, and &quot;scale=n&quot; tag to set the decimal precision.' | translate) + '<br/>' +
                                 ('Example: ${downspeed:noprefix:nosuffix:scale=1}' | translate)}}"></i>
                         </div>
                         <div class="setting-value col-sm-8">
@@ -84,7 +85,7 @@
                     </div>
                     <div class="row">
                         <div class="setting-key setting-key-without-desc col-sm-4">
-                            <span translate>Page Title Refresh Interval</span>
+                            <span translate>Updating Page Title Interval</span>
                             <span class="asterisk">*</span>
                         </div>
                         <div class="setting-value col-sm-8">
@@ -97,7 +98,7 @@
                     </div>
                     <div class="row">
                         <div class="setting-key setting-key-without-desc col-sm-4">
-                            <span translate>Global Stat Refresh Interval</span>
+                            <span translate>Updating Global Stat Interval</span>
                             <span class="asterisk">*</span>
                         </div>
                         <div class="setting-value col-sm-8">
@@ -110,7 +111,7 @@
                     </div>
                     <div class="row">
                         <div class="setting-key setting-key-without-desc col-sm-4">
-                            <span translate>Download Task Refresh Interval</span>
+                            <span translate>Updating Task Information Interval</span>
                             <span class="asterisk">*</span>
                         </div>
                         <div class="setting-value col-sm-8">
@@ -148,7 +149,20 @@
                     </div>
                     <div class="row">
                         <div class="setting-key setting-key-without-desc col-sm-4">
-                            <span translate>Removing Old Task After Retrying</span>
+                            <span translate>Action After Retrying Task</span>
+                        </div>
+                        <div class="setting-value col-sm-8">
+                            <select class="form-control" style="width: 100%;" ng-model="context.settings.afterRetryingTask"
+                                    ng-change="setAfterRetryingTask(context.settings.afterRetryingTask)">
+                                <option value="task-list-downloading" translate>Navigate to Downloading Tasks Page</option>
+                                <option value="task-detail" translate>Navigate to Task Detail Page</option>
+                                <option value="stay-on-current" translate>Stay on Current Page</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="setting-key setting-key-without-desc col-sm-4">
+                            <span translate>Remove Old Tasks After Retrying</span>
                         </div>
                         <div class="setting-value col-sm-8">
                             <select class="form-control" style="width: 100%;" ng-model="context.settings.removeOldTaskAfterRetrying"
@@ -159,14 +173,12 @@
                     </div>
                     <div class="row">
                         <div class="setting-key setting-key-without-desc col-sm-4">
-                            <span translate>Action After Retrying Task</span>
+                            <span translate>Confirm Task Removal</span>
                         </div>
                         <div class="setting-value col-sm-8">
-                            <select class="form-control" style="width: 100%;" ng-model="context.settings.afterRetryingTask"
-                                    ng-change="setAfterRetryingTask(context.settings.afterRetryingTask)">
-                                <option value="task-list-downloading" translate>Navigate to Downloading Task List Page</option>
-                                <option value="task-detail" translate>Navigate to Task Detail Page</option>
-                                <option value="stay-on-current" translate>Stay on Current Page</option>
+                            <select class="form-control" style="width: 100%;" ng-model="context.settings.confirmTaskRemoval"
+                                    ng-change="setConfirmTaskRemoval(context.settings.confirmTaskRemoval)"
+                                    ng-options="option.value as (option.name | translate) for option in context.trueFalseOptions">
                             </select>
                         </div>
                     </div>
@@ -345,11 +357,3 @@
         </div>
     </div>
 </section>
-<script id="setting-changed-notification.html" type="text/ng-template">
-    <div class="ui-notification custom-template">
-        <div class="message" ng-bind-html="message"></div>
-        <div class="message">
-            <a class="btn btn-small btn-primary close-notification" ng-click="refreshPage()" translate>Reload Page</a>
-        </div>
-    </div>
-</script>

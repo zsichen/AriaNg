@@ -14,8 +14,8 @@ AriaNg is a modern web frontend making [aria2](https://github.com/aria2/aria2) e
     * Search tasks
     * Retry tasks
     * Adjust task order by dragging
-    * More information of tasks (health percentage, client infomation of bt peers, etc.)
-    * Filter files by spectificed file types (videos, audios, pictures, documents, applications, archives, etc.) or file extensions
+    * More information of tasks (health percentage, client information of bt peers, etc.)
+    * Filter files by specified file types (videos, audios, pictures, documents, applications, archives, etc.) or file extensions
     * Tree view for multi-directory task
     * Download / upload speed chart for aria2 or single task
     * Full support for aria2 settings
@@ -64,6 +64,9 @@ Since AriaNg standard version loads language resources asynchronously, you may n
 
 ## Demo
 Please visit [http://ariang.mayswind.net/latest](http://ariang.mayswind.net/latest)
+
+## Third Party Extensions
+There are some third-party applications based on AriaNg, so you can use AriaNg in more scenarios or devices. Please visit [Third Party Extensions](http://ariang.mayswind.net/3rd-extensions.html) for more information.
 
 ## License
 [MIT](https://github.com/mayswind/AriaNg/blob/master/LICENSE)

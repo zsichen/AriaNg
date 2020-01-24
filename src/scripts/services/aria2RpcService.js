@@ -9,6 +9,8 @@
         var onFirstSuccessCallbacks = [];
         var onOperationSuccessCallbacks = [];
         var onOperationErrorCallbacks = [];
+        var onConnectionSuccessCallbacks = [];
+        var onConnectionFailedCallbacks = [];
         var onDownloadStartCallbacks = [];
         var onDownloadPauseCallbacks = [];
         var onDownloadStopCallbacks = [];
@@ -45,6 +47,8 @@
             var invokeContext = {
                 uniqueId: uniqueId,
                 requestBody: requestBody,
+                connectionSuccessCallback: requestContext.connectionSuccessCallback,
+                connectionFailedCallback: requestContext.connectionFailedCallback,
                 successCallback: requestContext.successCallback,
                 errorCallback: requestContext.errorCallback
             };
@@ -89,8 +93,8 @@
                 contexts[i].callback = function (response) {
                     results.push(response);
 
-                    hasSuccess = hasSuccess | response.success;
-                    hasError = hasError | !response.success;
+                    hasSuccess = hasSuccess || response.success;
+                    hasError = hasError || !response.success;
                 };
 
                 promises.push(methodFunc(contexts[i]));
@@ -130,6 +134,14 @@
 
             var context = {
                 methodName: (!isSystemMethod ? getAria2MethodFullName(methodName) : methodName)
+            };
+
+            context.connectionSuccessCallback = function () {
+                fireCustomEvent(onConnectionSuccessCallbacks);
+            };
+
+            context.connectionFailedCallback = function () {
+                fireCustomEvent(onConnectionFailedCallbacks);
             };
 
             if (secret && !isSystemMethod) {
@@ -268,7 +280,9 @@
                     'numSeeders',
                     'seeder',
                     'status',
-                    'errorCode'
+                    'errorCode',
+                    'verifiedLength',
+                    'verifyIntegrityPending'
                 ];
             },
             getFullTaskParams: function () {
@@ -276,6 +290,7 @@
 
                 requestParams.push('files');
                 requestParams.push('bittorrent');
+                requestParams.push('infoHash');
 
                 return requestParams;
             },
@@ -476,6 +491,12 @@
             },
             onOperationError: function (context) {
                 onOperationErrorCallbacks.push(context.callback);
+            },
+            onConnectionSuccess: function (context) {
+                onConnectionSuccessCallbacks.push(context.callback);
+            },
+            onConnectionFailed: function (context) {
+                onConnectionFailedCallbacks.push(context.callback);
             },
             onDownloadStart: function (context) {
                 onDownloadStartCallbacks.push(context.callback);

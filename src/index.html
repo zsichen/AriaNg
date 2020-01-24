@@ -19,7 +19,7 @@
     <link rel="icon" href="favicon.png">
     <!--[if IE]><link rel="shortcut icon" href="favicon.ico"><![endif]-->
     <link rel="apple-touch-icon" href="touchicon.png">
-    <!-- build:css css/bootstrap-3.3.7.min.css -->
+    <!-- build:css css/bootstrap-3.4.1.min.css -->
     <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css"/>
     <!-- endbuild -->
     <!-- build:css css/plugins.min.css -->
@@ -144,7 +144,7 @@
                             </li>
                             <li>
                                 <a class="pointer-cursor" ng-click="changeDisplayOrder('remain:asc')">
-                                    <span translate>By Remain Time</span>
+                                    <span translate>By Remaining</span>
                                     <i class="fa" ng-class="{'fa-check': isSetDisplayOrder('remain')}"></i>
                                 </a>
                             </li>
@@ -164,7 +164,7 @@
                     </li>
                     <li class="divider"></li>
                     <li>
-                        <a class="toolbar" title="{{'Help' | translate}}" href="http://github.com/mayswind/AriaNg" target="_blank">
+                        <a class="toolbar" title="{{'Help' | translate}}" href="https://github.com/mayswind/AriaNg" target="_blank">
                             <i class="fa fa-question-circle-o"></i>
                         </a>
                     </li>
@@ -241,7 +241,7 @@
                 </li>
                 <li data-href-match="/status">
                     <a href="#!/status">
-                        <span class="label pull-right" ng-if="globalStatusContext.isEnabled" ng-class="{'label-primary': taskContext.rpcStatus === 'Connecting', 'label-success': taskContext.rpcStatus === 'Connected', 'label-danger': taskContext.rpcStatus === 'Disconnected'}" ng-bind="taskContext.rpcStatus | translate"></span>
+                        <span class="label pull-right" ng-if="globalStatusContext.isEnabled || isCurrentRpcUseWebSocket" ng-class="{'label-primary': taskContext.rpcStatus === 'Connecting', 'label-success': taskContext.rpcStatus === 'Connected', 'label-danger': taskContext.rpcStatus === 'Disconnected'}" ng-bind="taskContext.rpcStatus | translate"></span>
                         <i class="fa fa-server"></i> <span translate>Aria2 Status</span>
                     </a>
                 </li>
@@ -266,15 +266,15 @@
                     </li>
                     <li class="divider"></li>
                     <li class="dropup">
-                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" title="{{'Quick Setting' | translate}}">
+                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" title="{{'Shortcut' | translate}}">
                             <i class="fa fa-wrench"></i>
-                            <span translate>Quick Setting</span>
+                            <span translate>Shortcut</span>
                             <i class="fa fa-caret-right fa-right-bottom fa-rotate-45 fa-half" aria-hidden="true"></i>
                         </a>
                         <ul class="dropdown-menu" role="menu">
                             <li>
-                                <a class="pointer-cursor" ng-click="showQuickSettingDialog('globalSpeedLimit', 'Global Speed Limit')">
-                                    <span translate>Global Speed Limit</span>
+                                <a class="pointer-cursor" ng-click="showQuickSettingDialog('globalSpeedLimit', 'Global Rate Limit')">
+                                    <span translate>Global Rate Limit</span>
                                 </a>
                             </li>
                         </ul>
@@ -313,10 +313,10 @@
 <script src="../node_modules/angular-cookies/angular-cookies.min.js"></script>
 <script src="../node_modules/angular-animate/angular-animate.min.js"></script>
 <!-- endbuild -->
-<!-- build:js js/bootstrap-3.3.7.min.js -->
+<!-- build:js js/bootstrap-3.4.1.min.js -->
 <script src="../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
 <!-- endbuild -->
-<!-- build:js js/moment-with-locales-2.22.2.min.js -->
+<!-- build:js js/moment-with-locales-2.24.0.min.js -->
 <script src="../node_modules/moment/min/moment.min.js"></script>
 <script src="../node_modules/moment/locale/zh-cn.js"></script>
 <script src="../node_modules/moment/locale/zh-tw.js"></script>

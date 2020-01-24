@@ -12,12 +12,24 @@
             };
         })();
         var browserSupportStorage = browserFeatures.localStroage || browserFeatures.cookies;
+        var browserSupportAppCache = !!$window.applicationCache;
 
+        var onAppCacheUpdatedCallbacks = [];
         var onFirstVisitCallbacks = [];
         var firstVisitCallbackFired = false;
         var sessionSettings = {
             debugMode: false
         };
+
+        if (browserSupportAppCache) {
+            var appCache = $window.applicationCache;
+            appCache.addEventListener('updateready', function (e) {
+                for (var i = 0; i < onAppCacheUpdatedCallbacks.length; i++) {
+                    var callback = onAppCacheUpdatedCallbacks[i];
+                    callback();
+                }
+            }, false);
+        }
 
         var fireFirstVisitEvent = function () {
             if (!browserSupportStorage) {
@@ -200,6 +212,9 @@
             isBrowserSupportStorage: function () {
                 return browserSupportStorage;
             },
+            isBrowserSupportApplicationCache: function () {
+                return browserSupportAppCache;
+            },
             getBrowserFeatures: function () {
                 return browserFeatures;
             },
@@ -365,6 +380,12 @@
             },
             setRemoveOldTaskAfterRetrying: function (value) {
                 setOption('removeOldTaskAfterRetrying', value);
+            },
+            getConfirmTaskRemoval: function () {
+                return getOption('confirmTaskRemoval');
+            },
+            setConfirmTaskRemoval: function (value) {
+                setOption('confirmTaskRemoval', value);
             },
             getAfterRetryingTask: function () {
                 return getOption('afterRetryingTask');
@@ -596,6 +617,13 @@
             },
             resetSettings: function () {
                 clearAll();
+            },
+            onApplicationCacheUpdated: function (callback) {
+                if (!callback) {
+                    return;
+                }
+
+                onAppCacheUpdatedCallbacks.push(callback);
             },
             onFirstAccess: function (callback) {
                 if (!callback) {

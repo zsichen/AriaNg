@@ -6,7 +6,10 @@
         var globalStatRefreshPromise = null;
 
         var refreshPageTitle = function () {
-            $document[0].title = ariaNgTitleService.getFinalTitleByGlobalStat($scope.globalStat);
+            $document[0].title = ariaNgTitleService.getFinalTitleByGlobalStat({
+                globalStat: $scope.globalStat,
+                currentRpcProfile: getCurrentRPCProfile()
+            });
         };
 
         var refreshGlobalStat = function (silent, callback) {
@@ -27,6 +30,21 @@
             }, silent);
         };
 
+        var getCurrentRPCProfile = function () {
+            if (!$scope.rpcSettings || $scope.rpcSettings.length < 1) {
+                return null;
+            }
+
+            for (var i = 0; i < $scope.rpcSettings.length; i++) {
+                var rpcSetting = $scope.rpcSettings[i];
+                if (rpcSetting.isDefault) {
+                    return rpcSetting;
+                }
+            }
+
+            return null;
+        };
+
         if (ariaNgSettingService.getBrowserNotification()) {
             ariaNgNotificationService.requestBrowserPermission();
         }
@@ -45,19 +63,42 @@
         $scope.quickSettingContext = null;
 
         $scope.rpcSettings = ariaNgSettingService.getAllRpcSettings();
+        $scope.isCurrentRpcUseWebSocket = ariaNgSettingService.isCurrentRpcUseWebSocket();
 
         $scope.isTaskSelected = function () {
             return $rootScope.taskContext.getSelectedTaskIds().length > 0;
         };
 
-        $scope.isSingleUrlTaskSelected = function () {
-            var selectedTask = $rootScope.taskContext.getSelectedTasks();
+        $scope.isSelectedTasksAllHaveUrl = function () {
+            var selectedTasks = $rootScope.taskContext.getSelectedTasks();
 
-            if (selectedTask.length !== 1) {
+            if (selectedTasks.length < 1) {
                 return false;
             }
 
-            return !!selectedTask[0].singleUrl;
+            for (var i = 0; i < selectedTasks.length; i++) {
+                if (!selectedTasks[i].singleUrl) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
+        $scope.isSelectedTasksAllHaveInfoHash = function () {
+            var selectedTasks = $rootScope.taskContext.getSelectedTasks();
+
+            if (selectedTasks.length < 1) {
+                return false;
+            }
+
+            for (var i = 0; i < selectedTasks.length; i++) {
+                if (!selectedTasks[i].bittorrent || !selectedTasks[i].infoHash) {
+                    return false;
+                }
+            }
+
+            return true;
         };
 
         $scope.isSpecifiedTaskSelected = function () {
@@ -169,8 +210,12 @@
             });
         };
 
-        $scope.isTaskRetryable = function (task) {
-            return task && task.status === 'error' && task.errorDescription && !task.bittorrent;
+        $scope.hasRetryableTask = function () {
+            return $rootScope.taskContext.hasRetryableTask();
+        };
+
+        $scope.hasCompletedTask = function () {
+            return $rootScope.taskContext.hasCompletedTask();
         };
 
         $scope.isSelectedTaskRetryable = function () {
@@ -181,7 +226,7 @@
             }
 
             for (var i = 0; i < selectedTasks.length; i++) {
-                if (!$scope.isTaskRetryable(selectedTasks[i])) {
+                if (!$rootScope.isTaskRetryable(selectedTasks[i])) {
                     return false;
                 }
             }
@@ -202,7 +247,7 @@
             var skipCount = 0;
 
             for (var i = 0; i < tasks.length; i++) {
-                if ($scope.isTaskRetryable(tasks[i])) {
+                if ($rootScope.isTaskRetryable(tasks[i])) {
                     retryableTasks.push(tasks[i]);
                 } else {
                     skipCount++;
@@ -245,7 +290,7 @@
                 return;
             }
 
-            ariaNgLocalizationService.confirm('Confirm Remove', 'Are you sure you want to remove the selected task?', 'warning', function () {
+            var removeTasks = function () {
                 $rootScope.loadPromise = aria2TaskService.removeTasks(tasks, function (response) {
                     if (response.hasError && tasks.length > 1) {
                         ariaNgLocalizationService.showError('Failed to remove some task(s).');
@@ -265,7 +310,13 @@
                         }
                     }
                 }, (tasks.length > 1));
-            });
+            };
+
+            if (ariaNgSettingService.getConfirmTaskRemoval()) {
+                ariaNgLocalizationService.confirm('Confirm Remove', 'Are you sure you want to remove the selected task?', 'warning', removeTasks);
+            } else {
+                removeTasks();
+            };
         };
 
         $scope.clearStoppedTasks = function () {
@@ -294,11 +345,45 @@
             $rootScope.taskContext.selectAll();
         };
 
-        $scope.copySelectedOneTaskDownloadLink = function () {
-            var selectedTask = $rootScope.taskContext.getSelectedTasks();
+        $scope.selectAllFailedTasks = function () {
+            $rootScope.taskContext.selectAllFailed();
+        };
 
-            if (selectedTask.length === 1) {
-                clipboard.copyText(selectedTask[0].singleUrl);
+        $scope.selectAllCompletedTasks = function () {
+            $rootScope.taskContext.selectAllCompleted();
+        };
+
+        $scope.copySelectedTasksDownloadLink = function () {
+            var selectedTasks = $rootScope.taskContext.getSelectedTasks();
+            var result = '';
+
+            for (var i = 0; i < selectedTasks.length; i++) {
+                if (i > 0) {
+                    result += '\n';
+                }
+
+                result += selectedTasks[i].singleUrl;
+            }
+
+            if (result.length > 0) {
+                clipboard.copyText(result);
+            }
+        };
+
+        $scope.copySelectedTasksMagnetLink = function () {
+            var selectedTasks = $rootScope.taskContext.getSelectedTasks();
+            var result = '';
+
+            for (var i = 0; i < selectedTasks.length; i++) {
+                if (i > 0) {
+                    result += '\n';
+                }
+
+                result += 'magnet:?xt=urn:btih:' + selectedTasks[i].infoHash;
+            }
+
+            if (result.length > 0) {
+                clipboard.copyText(result);
             }
         };
 
